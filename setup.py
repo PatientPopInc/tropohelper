@@ -21,4 +21,6 @@ setup(
     author_email='michael@michaeljgorman.com',
     url='https://github.com/mjgorman/tropohelper',
     packages=find_packages(),
+    test_suite='nose.collector',
+    tests_require=['nose<2.0']
 )

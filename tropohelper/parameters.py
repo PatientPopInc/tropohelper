@@ -1,7 +1,7 @@
 from troposphere import Parameter
 
 
-def vpc_address(stack, network):
+def create_vpc_param(stack, network):
     """Create a VPC Address Parameter."""
     return stack.stack.add_parameter(
         Parameter(
@@ -16,7 +16,7 @@ def vpc_address(stack, network):
         ))
 
 
-def subnet_param(stack, name, network):
+def create_subnet_param(stack, name, network):
     """Create a Subnet Parameter."""
     return stack.stack.add_parameter(
         Parameter(
@@ -31,18 +31,18 @@ def subnet_param(stack, name, network):
         ))
 
 
-def ami(stack, name):
+def create_ami_param(stack, name):
     """Create an AMI Parameter."""
     return stack.stack.add_parameter(
         Parameter(
             "{0}AmiIdParam".format(name),
             Type="String",
             Description="The AMI ID for the {0} instances".format(name),
-            Default="ami-375d2221"
+            Default="ami-12345678"
         ))
 
 
-def ssh_key_param(stack):
+def create_ssh_key_param(stack):
     """Create a SSH Key Parameter."""
     return stack.stack.add_parameter(
         Parameter(
@@ -53,7 +53,7 @@ def ssh_key_param(stack):
         ))
 
 
-def bool_param(stack, parameter_name):
+def create_bool_param(stack, parameter_name):
     """Create a custom Bool Parameter."""
     return stack.stack.add_parameter(
         Parameter(
@@ -65,7 +65,7 @@ def bool_param(stack, parameter_name):
             ))
 
 
-def dbpass_param(stack):
+def create_dbpass_param(stack):
     """Create a Database Password Parameter."""
     return stack.stack.add_parameter(
         Parameter(
@@ -76,13 +76,13 @@ def dbpass_param(stack):
         ))
 
 
-def instance_type(stack, name, default="t2.medium"):
+def create_instance_type_param(stack, name, itype="Standard", default="t2.medium"):
     """Create an Instance Type Parameter."""
     instance_sizes = ["t2.medium", "t2.large", "c4.large", "c4.xlarge",
                       "c4.4xlarge", "r3.large", "r3.xlarge", "r3.4xlarge",
                       "m4.large", "m4.xlarge", "m4.4xlarge", "m4.8xlarge",
                       "m4.16xlarge"]
-    if name == "DB":
+    if itype == "DB":
         instance_sizes = ["db.t2.medium", "db.t2.large", "db.m4.large",
                           "db.m4.xlarge", "db.m4.2xlarge", "db.m4.4xlarge",
                           "db.m3.10xlarge", "db.r3.large", "db.r3.xlarge",
@@ -99,7 +99,7 @@ def instance_type(stack, name, default="t2.medium"):
         ))
 
 
-def cache_instance_type(stack):
+def create_cache_instance_type_param(stack):
     """Create a Cache Instance Type Parameter."""
     return stack.stack.add_parameter(
         Parameter(

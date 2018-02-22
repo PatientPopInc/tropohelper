@@ -9,9 +9,6 @@ make a file for creating a stack large and repedative. Using these helper
 functions keeps things much more DRY.
 """
 
-install_requires = ['troposphere>=2.2.0', 'awacs>=0.7.2']
-
-
 setup(
     name='tropohelper',
     version="1.0.0",
@@ -21,6 +18,7 @@ setup(
     author_email='michael@michaeljgorman.com',
     url='https://github.com/mjgorman/tropohelper',
     packages=find_packages(),
+    install_requires=['troposphere>=2.2.0', 'awacs>=0.7.2'],
     test_suite='nose.collector',
     tests_require=['nose<2.0']
 )

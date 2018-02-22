@@ -9,7 +9,7 @@ def create_iam_role(stack, role_name, managed_policies=(), instance_profile=Fals
     """Add IAM role resource."""
     managed_policy_arns = ['arn:aws:iam::aws:policy/{0}'.format(policy)
                            for policy in managed_policies]
-    new_role = stack.template.add_resource(Role(
+    new_role = stack.stack.add_resource(Role(
         '{0}Role'.format(role_name.replace('-', '')),
         RoleName=role_name,
         ManagedPolicyArns=managed_policy_arns,
@@ -24,7 +24,7 @@ def create_iam_role(stack, role_name, managed_policies=(), instance_profile=Fals
         ))
 
     if instance_profile:
-        stack.template.add_resource(InstanceProfile(
+        stack.stack.add_resource(InstanceProfile(
             '{}instanceprofile'.format(role_name.replace('-', '')),
             InstanceProfileName=role_name,
             Roles=[(Ref(new_role))]
@@ -36,9 +36,9 @@ def create_iam_group(stack, group_name, managed_policies=()):
     """Add IAM group resource."""
     managed_policy_arns = ['arn:aws:iam::aws:policy/{0}'.format(policy)
                            for policy in managed_policies]
-    return stack.template.add_resource(Group(group_name,
-                                             GroupName=group_name,
-                                             ManagedPolicyArns=managed_policy_arns))
+    return stack.stack.add_resource(Group(group_name,
+                                          GroupName=group_name,
+                                          ManagedPolicyArns=managed_policy_arns))
 
 
 def create_iam_user(stack, name, groups=()):

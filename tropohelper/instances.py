@@ -5,8 +5,8 @@ from troposphere.rds import DBInstance, DBSubnetGroup, DBParameterGroup
 import troposphere.elasticache as elasticache
 
 
-def ec2_instance(stack, name, ami, subnetid, instance_type="t1.micro", security_groups=(),
-                 user_data=None):
+def create_ec2_instance(stack, name, ami, subnetid, instance_type="t1.micro", security_groups=(),
+                 user_data=""):
     """Add EC2 Instance Resource."""
     return stack.stack.add_resource(
         Instance(
@@ -21,7 +21,7 @@ def ec2_instance(stack, name, ami, subnetid, instance_type="t1.micro", security_
         ))
 
 
-def create_launch_config(stack, name, ami, security_group, instance_type, profile, user_data=None):
+def create_launch_config(stack, name, ami, security_group, instance_type, profile, user_data=""):
     """Add EC2 LaunchConfiguration Resource."""
     return stack.stack.add_resource(
         LaunchConfiguration(

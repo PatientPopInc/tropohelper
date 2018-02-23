@@ -5,7 +5,7 @@ from troposphere.rds import DBInstance, DBSubnetGroup, DBParameterGroup
 import troposphere.elasticache as elasticache
 
 
-def create_ec2_instance(stack, name, ami, subnetid, instance_type="t1.micro", security_groups=(),
+def create_ec2_instance(stack, name, ami, subnetid, keyname, instance_type="t1.micro", security_groups=(),
                  user_data=""):
     """Add EC2 Instance Resource."""
     return stack.stack.add_resource(
@@ -13,7 +13,7 @@ def create_ec2_instance(stack, name, ami, subnetid, instance_type="t1.micro", se
             "{0}".format(name),
             ImageId=ami,
             InstanceType=instance_type,
-            KeyName="util_bastion",
+            KeyName=keyname,
             SecurityGroupIds=list(security_groups),
             SubnetId=subnetid,
             Tags=Tags(Name=name),

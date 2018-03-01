@@ -76,7 +76,7 @@ def create_cache_cluster(stack, cache_type):
         ))
 
 
-def create_autoscale_group(stack, name, launch_con, vpc_zones, elbs=()):
+def create_autoscale_group(stack, name, launch_con, vpc_zones, elbs=[]):
     """Add EC2 AutoScalingGroup Resource."""
     return stack.stack.add_resource(
         AutoScalingGroup(

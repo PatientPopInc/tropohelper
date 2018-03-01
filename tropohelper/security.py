@@ -77,9 +77,9 @@ def create_instance_profile(stack, name, iam_role):
         ))
 
 
-def create_iam_policy(stack, policy_name, actions, groups=(), roles=(), users=(), resources=('*')):
+def create_iam_policy(stack, policy_name, actions, groups=[], roles=[], users=[], resources=['*']):
     """Add IAM policy resource."""
-    return stack.template.add_resource(
+    return stack.stack.add_resource(
         ManagedPolicy(policy_name,
                       ManagedPolicyName=policy_name,
                       Groups=groups,

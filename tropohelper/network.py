@@ -22,7 +22,7 @@ def create_vpc_peer(stack, connection):
     """Add VPC Peering Connection Resource."""
     return stack.stack.add_resource(
         VPCPeeringConnection(
-            '{0}VpcPeeringConnection'.format(connection),
+            '{0}VpcPeeringConnection'.format(connection.replace('-', '')),
             PeerVpcId=connection,
             VpcId=Ref(stack.vpc),
         ))
@@ -57,7 +57,7 @@ def create_elastic_ip(stack, name):
         ))
 
 
-def associate_routes(stack, routes, subnet_list=()):
+def associate_routes(stack, subnet_list=()):
     """Add Route Association Resources."""
     for association in subnet_list:
         stack.stack.add_resource(
@@ -127,11 +127,19 @@ def populate_routes(stack, routes):
                     DestinationCidrBlock='{0}'.format(route['cidrblock']),
                     RouteTableId=Ref(tables[route['routetable']])
                 ))
-        else:
+        elif route['route'] == "nat":
             stack.stack.add_resource(
                 Route(
                     '{0}'.format(route['route']),
                     NatGatewayId=Ref(gateways[route['route']]),
+                    DestinationCidrBlock='{0}'.format(route['cidrblock']),
+                    RouteTableId=Ref(tables[route['routetable']])
+                ))
+        elif route['route'] == "vpc":
+            stack.stack.add_resource(
+                Route(
+                    '{0}{1}'.format(route['route'], route['routetable']),
+                    VpcPeeringConnectionId=route['vpc_peer'],
                     DestinationCidrBlock='{0}'.format(route['cidrblock']),
                     RouteTableId=Ref(tables[route['routetable']])
                 ))

@@ -2,6 +2,7 @@ from troposphere import Ref, GetAtt
 from troposphere.ec2 import VPC, RouteTable, Route, InternetGateway, NatGateway, \
  EIP, Subnet, SubnetRouteTableAssociation, VPCGatewayAttachment, VPCPeeringConnection
 import troposphere.elasticloadbalancing as elb
+import troposphere.elasticloadbalancingv2 as alb
 
 
 def create_vpc(stack, name):
@@ -177,3 +178,22 @@ def create_frontend_elb(stack, cert=None):
             SecurityGroups=[Ref(stack.frontend_security_group)],
             Scheme="internet-facing",
         ))
+
+
+def create_target_group(stack, name, port, protocol='HTTPS', targets=[]):
+    """Add Target Group Resource."""
+    return stack.stack.add_resource(alb.TargetGroup(
+        '{0}TargetGroup'.format(name),
+        HealthCheckIntervalSeconds="30",
+        HealthCheckProtocol=protocol,
+        HealthCheckTimeoutSeconds="10",
+        HealthyThresholdCount="4",
+        Matcher=alb.Matcher(
+            HttpCode="200"),
+        Name='{0}Target'.format(name),
+        Port=port,
+        Protocol=protocol,
+        Targets=targets,
+        UnhealthyThresholdCount="3",
+        VpcId=Ref(stack.vpc)
+    ))

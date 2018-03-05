@@ -1,6 +1,7 @@
 from troposphere.iam import Role, InstanceProfile, ManagedPolicy, Group, User, AccessKey
 from troposphere import Ref, Output, GetAtt
 from troposphere.ec2 import SecurityGroup, SecurityGroupRule
+import troposphere.elasticloadbalancingv2 as alb
 from awacs.sts import AssumeRole
 from awacs.aws import Action, Allow, Policy, Principal, Statement
 
@@ -117,3 +118,10 @@ def create_security_group(stack, name, rules=()):
             SecurityGroupIngress=ingress_rules,
             VpcId=Ref(stack.vpc),
         ))
+
+
+def create_alb_cert(stack, name, certificate_arn):
+    """Add Alb Certificate Resource."""
+    return stack.stack.add_resource(alb.Certificate(
+        '{0}AlbCert'.format(name),
+        CertificateArn=certificate_arn))

@@ -197,3 +197,45 @@ def create_target_group(stack, name, port, protocol='HTTPS', targets=[]):
         UnhealthyThresholdCount="3",
         VpcId=Ref(stack.vpc)
     ))
+
+
+def create_alb(stack, name, subnets=[], condition_field=""):
+    """Add Application Loadbalancer Resource."""
+    return stack.stack.add_resource(alb.LoadBalancer(
+        '{0}ALB'.format(name),
+        Condition=condition_field,
+        Name="{0}ALB".format(name),
+        Scheme="internet-facing",
+        Subnets=subnets))
+
+
+def create_alb_listener(stack, name, alb_arn, target_group, port=443, protocol='HTTPS', certificates=[], condition_field=""):
+    """Add ALB Listener Resource."""
+    return stack.stack.add_resource(alb.Listener(
+        '{0}Listener'.format(name),
+        Condition=condition_field,
+        Port=port,
+        Protocol=protocol,
+        Certificates=certificates,
+        LoadBalancerArn=alb_arn,
+        DefaultActions=[alb.Action(
+            Type="forward",
+            TargetGroupArn=target_group)]
+        ))
+
+
+def create_alb_listener_rule(stack, name, listener, condition, target_group, priority=1, condition_field=""):
+    """Add ALB Listener Rule Resource."""
+    return stack.stack.add_resource(alb.ListenerRule(
+        '{0}ListenerRule'.format(name),
+        Condition=condition_field,
+        ListenerArn=listener,
+        Conditions=[alb.Condition(
+            Field=condition['field'],
+            Values=condition['values'])],
+        Actions=[alb.Action(
+            Type="forward",
+            TargetGroupArn=target_group
+        )],
+        Priority=priority
+    ))

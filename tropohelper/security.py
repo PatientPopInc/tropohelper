@@ -1,6 +1,7 @@
 from troposphere.iam import Role, InstanceProfile, ManagedPolicy, Group, User, AccessKey
 from troposphere import Ref, Output, GetAtt
 from troposphere.ec2 import SecurityGroup, SecurityGroupRule
+from troposphere.certificatemanager import DomainValidationOption, Certificate
 import troposphere.elasticloadbalancingv2 as alb
 from awacs.sts import AssumeRole
 from awacs.aws import Action, Allow, Policy, Principal, Statement
@@ -127,3 +128,18 @@ def create_alb_cert(stack, name, certificate_arn, listener_arn, condition_field=
                                                             Certificates=[alb.Certificate('{0}Cert'.format(name),
                                                                                           CertificateArn=certificate_arn)],
                                                             ListenerArn=listener_arn))
+
+
+def create_acm_certificate(stack, domain_name, alternate_names=[]):
+    """Add ACM Certificate Resource."""
+    return stack.stack.add_resource(Certificate(
+        'mycert',
+        DomainName='{0}'.format(domain_name),
+        SubjectAlternativeNames=alternate_names,
+        DomainValidationOptions=[
+            DomainValidationOption(
+                DomainName='{0}'.format(domain_name),
+                ValidationDomain='{0}'.format(domain_name),
+            ),
+        ],
+    ))

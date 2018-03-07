@@ -252,10 +252,11 @@ def create_hosted_zone(stack, name):
         Name=name))
 
 
-def create_or_update_dns_record(stack, record_name, record_type, record_value, hosted_zone_name):
+def create_or_update_dns_record(stack, record_name, record_type, record_value, hosted_zone_name, condition_field=""):
     """Create or Update Route53 Record Resource."""
     return stack.stack.add_resource(RecordSetType(
         '{0}'.format(record_name.replace('.', '')),
+        Condition=condition_field,
         HostedZoneName='{0}.'.format(hosted_zone_name),
         Type=record_type,
         TTL="60",

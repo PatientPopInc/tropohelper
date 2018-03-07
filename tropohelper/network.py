@@ -199,24 +199,27 @@ def create_target_group(stack, name, port, protocol='HTTPS', targets=[]):
     ))
 
 
-def create_alb(stack, name, subnets=[], condition_field=""):
+def create_alb(stack, name, subnets=[], security_groups=[], condition_field=""):
     """Add Application Loadbalancer Resource."""
     return stack.stack.add_resource(alb.LoadBalancer(
         '{0}ALB'.format(name),
         Condition=condition_field,
         Name="{0}ALB".format(name),
         Scheme="internet-facing",
+        SecurityGroups=security_groups,
         Subnets=subnets))
 
 
 def create_alb_listener(stack, name, alb_arn, target_group, port=443, protocol='HTTPS', certificates=[], condition_field=""):
     """Add ALB Listener Resource."""
+    certificate_arns = [alb.Certificate('{0}Cert'.format(name), CertificateArn=certificate_arn)
+                        for certificate_arn in certificates]
     return stack.stack.add_resource(alb.Listener(
         '{0}Listener'.format(name),
         Condition=condition_field,
         Port=port,
         Protocol=protocol,
-        Certificates=certificates,
+        Certificates=certificate_arns,
         LoadBalancerArn=alb_arn,
         DefaultActions=[alb.Action(
             Type="forward",

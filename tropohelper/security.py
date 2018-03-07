@@ -120,8 +120,10 @@ def create_security_group(stack, name, rules=()):
         ))
 
 
-def create_alb_cert(stack, name, certificate_arn):
+def create_alb_cert(stack, name, certificate_arn, listener_arn, condition_field=""):
     """Add Alb Certificate Resource."""
-    return stack.stack.add_resource(alb.Certificate(
-        '{0}AlbCert'.format(name),
-        CertificateArn=certificate_arn))
+    return stack.stack.add_resource(alb.ListenerCertificate('{0}ListenerCert'.format(name),
+                                                            Condition=condition_field,
+                                                            Certificates=[alb.Certificate('{0}Cert'.format(name),
+                                                                                          CertificateArn=certificate_arn)],
+                                                            ListenerArn=listener_arn))

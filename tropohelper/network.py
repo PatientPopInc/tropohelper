@@ -3,6 +3,7 @@ from troposphere.ec2 import VPC, RouteTable, Route, InternetGateway, NatGateway,
  EIP, Subnet, SubnetRouteTableAssociation, VPCGatewayAttachment, VPCPeeringConnection
 import troposphere.elasticloadbalancing as elb
 import troposphere.elasticloadbalancingv2 as alb
+from troposphere.route53 import HostedZone, RecordSetType
 
 
 def create_vpc(stack, name):
@@ -241,4 +242,23 @@ def create_alb_listener_rule(stack, name, listener, condition, target_group, pri
             TargetGroupArn=target_group
         )],
         Priority=priority
+    ))
+
+
+def create_hosted_zone(stack, name):
+    """Add Route53 HostedZone Resource."""
+    return stack.stack.add_resource(HostedZone(
+        '{0}HostedZone'.format(name.replace('.', '')),
+        Name=name))
+
+
+def create_or_update_dns_record(stack, record_name, record_type, record_value, hosted_zone_name):
+    """Create or Update Route53 Record Resource."""
+    return stack.stack.add_resource(RecordSetType(
+        '{0}'.format(record_name.replace('.', '')),
+        HostedZoneName='{0}.'.format(hosted_zone_name),
+        Type=record_type,
+        TTL="60",
+        Name='{0}.'.format(record_name),
+        ResourceRecords=record_value
     ))

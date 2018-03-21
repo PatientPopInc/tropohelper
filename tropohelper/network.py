@@ -137,7 +137,7 @@ def populate_routes(stack, routes):
                     DestinationCidrBlock='{0}'.format(route['cidrblock']),
                     RouteTableId=Ref(tables[route['routetable']])
                 ))
-        elif route['route'] == "vpc":
+        elif "vpc_peer" in route.keys():
             stack.stack.add_resource(
                 Route(
                     '{0}{1}'.format(route['route'], route['routetable']),
@@ -255,7 +255,7 @@ def create_hosted_zone(stack, name):
 def create_or_update_dns_record(stack, record_name, record_type, record_value, hosted_zone_name, condition_field=""):
     """Create or Update Route53 Record Resource."""
     return stack.stack.add_resource(RecordSetType(
-        '{0}'.format(record_name.replace('.', '')),
+        '{0}'.format(record_name.replace('.', '').replace('*', 'wildcard')),
         Condition=condition_field,
         HostedZoneName='{0}.'.format(hosted_zone_name),
         Type=record_type,

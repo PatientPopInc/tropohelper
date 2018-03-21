@@ -22,7 +22,7 @@ def create_ec2_instance(stack, name, ami, subnetid, keyname, instance_profile=""
         ))
 
 
-def create_launch_config(stack, name, ami, security_group, instance_type, profile, user_data=""):
+def create_launch_config(stack, name, ami, security_group, instance_type, profile, block_devices=[], user_data=""):
     """Add EC2 LaunchConfiguration Resource."""
     return stack.stack.add_resource(
         LaunchConfiguration(
@@ -32,7 +32,8 @@ def create_launch_config(stack, name, ami, security_group, instance_type, profil
             SecurityGroups=security_group,
             InstanceType=instance_type,
             IamInstanceProfile=profile,
-            UserData=Base64(user_data)
+            UserData=Base64(user_data),
+            BlockDeviceMappings=block_devices
         ))
 
 

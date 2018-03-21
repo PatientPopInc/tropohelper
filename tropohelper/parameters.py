@@ -78,10 +78,10 @@ def create_dbpass_param(stack):
 
 def create_instance_type_param(stack, name, itype="Standard", default="t2.medium"):
     """Create an Instance Type Parameter."""
-    instance_sizes = ["t2.medium", "t2.large", "c4.large", "c4.xlarge",
-                      "c4.4xlarge", "r3.large", "r3.xlarge", "r3.4xlarge",
-                      "m4.large", "m4.xlarge", "m4.4xlarge", "m4.8xlarge",
-                      "m4.16xlarge"]
+    instance_sizes = ["t2.medium", "t2.large", "t2.xlarge", "t2.2xlarge",
+                      "c5.large", "c5.xlarge", "c5.2xlarge", "c5.4xlarge",
+                      "r4.large", "r4.xlarge", "r4.2xlarge", "r4.4xlarge",
+                      "m5.large", "m5.xlarge", "m5.2xlarge", "m5.4xlarge"]
     if itype == "DB":
         instance_sizes = ["db.t2.medium", "db.t2.large", "db.m4.large",
                           "db.m4.xlarge", "db.m4.2xlarge", "db.m4.4xlarge",
@@ -110,4 +110,15 @@ def create_cache_instance_type_param(stack):
             AllowedValues=['cache.t2.small', 'cache.t2.medium',
                            'cache.m4.large', 'cache.m4.2xlarge'],
             ConstraintDescription='must select a valid Cache Node type.',
+        ))
+
+
+def create_misc_string_param(stack, name, description="String"):
+    """Create a Misc. String parameter."""
+    return stack.stack.add_parameter(
+        Parameter(
+            '{0}StringParam'.format(name),
+            Description='{0}'.format(description),
+            Type='String',
+            Default='',
         ))

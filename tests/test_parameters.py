@@ -55,7 +55,7 @@ class TestParameters:
     def test_create_instance_type_param(self):
         """Test creating normal instance type parameter."""
         create_instance_type_param(self.stack, 'TestType')
-        assert "r3.large" in self.stack.stack.to_dict()['Parameters']['TestTypeboxsizeParam']['AllowedValues']
+        assert "r4.large" in self.stack.stack.to_dict()['Parameters']['TestTypeboxsizeParam']['AllowedValues']
 
     def test_create_instance_type_db_param(self):
         """Test creating db instance type parameter."""

@@ -1,7 +1,7 @@
 from troposphere import Ref, Base64, Equals, Tags
 from troposphere.autoscaling import AutoScalingGroup, LaunchConfiguration
 from troposphere.ec2 import SecurityGroupRule, SecurityGroup, Instance
-from troposphere.rds import DBInstance, DBSubnetGroup, DBParameterGroup
+from troposphere.rds import DBParameterGroup, DBSecurityGroup, DBInstance
 import troposphere.elasticache as elasticache
 
 
@@ -91,69 +91,39 @@ def create_autoscale_group(stack, name, launch_con, vpc_zones, elbs=[], target_g
             LoadBalancerNames=elbs,
             TargetGroupARNs=target_groups,
         ))
-
-
-def create_rds_instance(stack):
-    """Add RDS Instance Resource."""
-    conditions = {
-        "LaunchRDS": Equals(
-            Ref(stack.rds_param),
-            "YES"
-        ),
-    }
-    for each in conditions:
-        stack.stack.add_condition(each, conditions[each])
-
-    db_subnetgroup = stack.stack.add_resource(
-        DBSubnetGroup(
-            'DBSubnetGroup',
-            Condition="LaunchRDS",
-            DBSubnetGroupDescription="{0} Subnet Group".format(stack.env),
-            SubnetIds=[Ref(stack.backend1_subnet), Ref(stack.backend2_subnet)]
-        )
-    )
-
-    db_security_group = stack.stack.add_resource(
-        SecurityGroup(
-            'DBSecurityGroup',
-            Condition="LaunchRDS",
-            GroupDescription="{0} DB".format(stack.env),
-            VpcId=Ref(stack.vpc),
-            SecurityGroupIngress=[
-                SecurityGroupRule(
-                    "MYSQL",
-                    CidrIp="10.0.0.0/8",
-                    FromPort=3306,
-                    ToPort=3306,
-                    IpProtocol="tcp",
-                ),
-            ]
-        )
-    )
-    db_param_group = stack.stack.add_resource(
+def create_db_param_group(stack, name, description, family, parameters={}):
+    """Create a DB Parameter Group"""
+    return stack.stack.add_resource(
         DBParameterGroup(
-            'DbParamGroup',
-            Condition="LaunchRDS",
-            Description="{0} Parameter Group".format(stack.env),
-            Family="MySQL5.7",
-        )
-    )
+            '{0}DBParamGroup'.format(name),
+            Description="{0} Parameter Group".format(description),
+            Family=family,
+            Parameters=parameters
+        ))
+
+def create_rds_instance(stack, db_instance_identifier, db_name, db_instance_class, db_username, db_password,
+    db_subnet_group, db_security_groups, vpc_security_groups, db_param_group, 
+    allocated_storage="20", engine="MySQL", engine_version="5.7.17", 
+    storage_encrypted="True", deletion_policy="Retain", multi_az=False):
+    
+    """Add RDS Instance Resource."""
 
     return stack.stack.add_resource(
         DBInstance(
             'RDSInstance',
-            Condition="LaunchRDS",
-            DBInstanceIdentifier="{0}Master".format(stack.env),
-            DBName=Ref(stack.db_name_param),
-            DBInstanceClass=Ref(stack.db_instance_type_param),
-            AllocatedStorage="200",
-            Engine="MySQL",
-            EngineVersion="5.7.17",
-            MasterUsername=Ref(stack.db_user_param),
-            MasterUserPassword=Ref(stack.dbpass_param),
-            DBSubnetGroupName=Ref(db_subnetgroup),
-            VPCSecurityGroups=[Ref(db_security_group)],
-            DBParameterGroupName=Ref(db_param_group),
-            StorageEncrypted="True",
-            DeletionPolicy="Retain"
+            DBInstanceIdentifier=db_instance_identifier,
+            DBName=db_name,
+            DBInstanceClass=db_instance_class,
+            AllocatedStorage=allocated_storage,
+            Engine=engine,
+            EngineVersion=engine_version,
+            MasterUsername=db_username,
+            MasterUserPassword=db_password,
+            DBSubnetGroupName=db_subnet_group,
+            DBSecurityGroups=list(db_security_groups),
+            VPCSecurityGroups=list(db_security_groups),
+            DBParameterGroupName=db_param_group,
+            StorageEncrypted=storage_encrypted,
+            DeletionPolicy=deletion_policy,
+            MultiAZ=multi_az
         ))

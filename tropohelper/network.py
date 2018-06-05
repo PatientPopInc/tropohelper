@@ -1,6 +1,7 @@
 from troposphere import Ref, GetAtt
 from troposphere.ec2 import VPC, RouteTable, Route, InternetGateway, NatGateway, \
  EIP, Subnet, SubnetRouteTableAssociation, VPCGatewayAttachment, VPCPeeringConnection
+from troposphere.rds import DBSubnetGroup
 import troposphere.elasticloadbalancing as elb
 import troposphere.elasticloadbalancingv2 as alb
 from troposphere.route53 import HostedZone, RecordSetType
@@ -84,6 +85,14 @@ def create_subnet(stack, name, subnet_cidr, avail_zone='us-east-1a', public_ip=F
             ],
         ))
 
+def create_db_subnet(stack, name, description, subnet_ids=()):
+    """Add DB Subnet Resource."""
+    return stack.stack.add_resource(
+        DBSubnetGroup(
+            '{0}DBSubnet'.format(name),
+            DBSubnetGroupDescription="{0} Subnet Group".format(description),
+            SubnetIds=subnet_ids
+        ))
 
 def create_nat_gateway(stack):
     """Add VPC NAT Gateway Resource."""

@@ -121,7 +121,7 @@ def create_rds_instance(stack, db_instance_identifier, db_name, db_instance_clas
             MasterUserPassword=db_password,
             DBSubnetGroupName=db_subnet_group,
             DBSecurityGroups=list(db_security_groups),
-            VPCSecurityGroups=list(db_security_groups),
+            VPCSecurityGroups=list(vpc_security_groups),
             DBParameterGroupName=db_param_group,
             StorageEncrypted=storage_encrypted,
             DeletionPolicy=deletion_policy,

@@ -102,10 +102,10 @@ def create_db_param_group(stack, name, description, family, parameters={}):
         ))
 
 def create_rds_instance(stack, db_instance_identifier, db_name, db_instance_class, db_username, db_password,
-    db_subnet_group, db_security_groups, vpc_security_groups, db_param_group, 
-    allocated_storage="20", engine="MySQL", engine_version="5.7.17", 
+    db_subnet_group, db_security_groups, vpc_security_groups, db_param_group,
+    allocated_storage="20", engine="MySQL", engine_version="5.7.17",
     storage_encrypted="True", deletion_policy="Retain", multi_az=False):
-    
+
     """Add RDS Instance Resource."""
 
     return stack.stack.add_resource(

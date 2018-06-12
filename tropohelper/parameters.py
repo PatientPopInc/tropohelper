@@ -99,16 +99,16 @@ def create_instance_type_param(stack, name, itype="Standard", default="t2.medium
         ))
 
 
-def create_cache_instance_type_param(stack):
+def create_cache_instance_type_param(stack, name):
     """Create a Cache Instance Type Parameter."""
     return stack.stack.add_parameter(
         Parameter(
-            'CacheNodeType',
+            '{0}CacheNodeType'.format(name.replace('-', '')),
             Description='The compute and memory capacity of the nodes in the Cache Cluster',
             Type='String',
             Default='cache.t2.small',
-            AllowedValues=['cache.t2.small', 'cache.t2.medium',
-                           'cache.m4.large', 'cache.m4.2xlarge'],
+            AllowedValues=['cache.t2.micro', 'cache.t2.small', 'cache.t2.medium',
+                           'cache.m3.medium', 'cache.m4.large', 'cache.m4.2xlarge'],
             ConstraintDescription='must select a valid Cache Node type.',
         ))
 

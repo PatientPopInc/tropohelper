@@ -37,46 +37,6 @@ def create_launch_config(stack, name, ami, security_group, instance_type, profil
         ))
 
 
-def create_cache_cluster(stack, cache_type):
-    """Add Elasticache Cache cluster Resource."""
-    ports = {
-        'redis': 6379,
-        'memcached': 11211
-        }
-    secgroup = stack.stack.add_resource(SecurityGroup(
-        '{0}SecurityGroup'.format(cache_type),
-        GroupDescription="{0} Security Group".format(cache_type),
-        SecurityGroupIngress=[
-            SecurityGroupRule(
-                "{0}".format(cache_type),
-                CidrIp=Ref(stack.vpc_address_param),
-                FromPort=ports[cache_type],
-                ToPort=ports[cache_type],
-                IpProtocol="tcp",
-            )],
-        VpcId=Ref(stack.vpc),
-    ))
-
-    subnet_group = stack.stack.add_resource(
-        elasticache.SubnetGroup(
-            '{0}cache'.format(stack.env),
-            Description='{0} cache'.format(stack.env),
-            SubnetIds=[Ref(stack.backend1_subnet), Ref(stack.backend2_subnet)],
-        ))
-
-    stack.stack.add_resource(
-        elasticache.ReplicationGroup(
-            'CacheCluster',
-            ReplicationGroupId='{0}cluster'.format(stack.env),
-            ReplicationGroupDescription='{0}cluster'.format(stack.env),
-            Engine='{0}'.format(cache_type),
-            CacheNodeType=Ref(stack.cache_instance_type_param),
-            NumCacheClusters='2',
-            CacheSubnetGroupName=Ref(subnet_group),
-            SecurityGroupIds=[Ref(secgroup)]
-        ))
-
-
 def create_autoscale_group(stack, name, launch_con, vpc_zones, elbs=[], target_groups=[]):
     """Add EC2 AutoScalingGroup Resource."""
     return stack.stack.add_resource(

@@ -64,6 +64,6 @@ class TestParameters:
 
     def test_create_cache_instance_type_param(self):
         """Test creating cache instance type paramter."""
-        create_cache_instance_type_param(self.stack)
-        cache_default_size = self.stack.stack.to_dict()['Parameters']['CacheNodeType']['Default']
+        create_cache_instance_type_param(self.stack, 'TestCacheType')
+        cache_default_size = self.stack.stack.to_dict()['Parameters']['TestCacheTypeCacheNodeType']['Default']
         assert cache_default_size == 'cache.t2.small'

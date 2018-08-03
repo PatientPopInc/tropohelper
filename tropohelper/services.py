@@ -1,13 +1,25 @@
 from troposphere import Ref
-from troposphere.firehose import DeliveryStream, EncryptionConfiguration, \
-                                 KMSEncryptionConfig, S3DestinationConfiguration, \
-                                 BufferingHints, CloudWatchLoggingOptions
+from troposphere.firehose import (
+    BufferingHints,
+    CloudWatchLoggingOptions,
+    CopyCommand,
+    DeliveryStream,
+    EncryptionConfiguration,
+    KMSEncryptionConfig,
+    RedshiftDestinationConfiguration,
+    S3Configuration,
+    S3DestinationConfiguration,
+    KinesisStreamSourceConfiguration
+)
+from troposphere.kinesis import Stream
 from troposphere.ec2 import SecurityGroupRule, SecurityGroup
 import troposphere.elasticache as elasticache
 
 
-def create_firehose(stack, name, bucket_arn, buffering_seconds=300, buffering_size=5):
-    """Add Kinesus Firehose Resource."""
+def create_s3_firehose(stack, name, bucket_arn, kms_key_arn, role_arn,
+                       buffering_seconds=300, buffering_size=5,
+                       compression_format='GZIP', log_group_name='firehose-streams'):
+    """Add Kinesis S3 Firehose Resource."""
     return stack.stack.add_resource(DeliveryStream(
         '{0}Firehose'.format(name.replace('-', '')),
         DeliveryStreamName=name,
@@ -15,17 +27,64 @@ def create_firehose(stack, name, bucket_arn, buffering_seconds=300, buffering_si
             BucketARN=bucket_arn,
             Prefix=name,
             BufferingHints=BufferingHints(IntervalInSeconds=buffering_seconds, SizeInMBs=buffering_size),
-            CompressionFormat='GZIP',
+            CompressionFormat=compression_format,
             EncryptionConfiguration=EncryptionConfiguration(
                 KMSEncryptionConfig=KMSEncryptionConfig(
-                    AWSKMSKeyARN='arn:aws:kms:us-east-1:347225174248:key/232e45d1-6b15-4681-8de7-8629b0ed6b22')),
+                    AWSKMSKeyARN=kms_key_arn)),
             CloudWatchLoggingOptions=CloudWatchLoggingOptions(
                 Enabled=True,
-                LogGroupName='firehose-streams',
+                LogGroupName=log_group_name,
                 LogStreamName=name),
-            RoleARN="arn:aws:iam::347225174248:role/firehose_delivery_role")
+            RoleARN=role_arn)
         ))
 
+def create_kinesis_stream(stack, name, shard_count):
+    """Add Kinesis Stream with the specified shard count and default retention period."""
+    return stack.stack.add_resource(Stream(
+        '{0}Stream'.format(name.replace('-', '')),
+        ShardCount=shard_count
+    ))
+
+def create_json_redshift_firehose_from_stream(stack, name, firehose_arn,
+                                              source_stream_arn, source_stream_role_arn,
+                                              redshift_host_port, redshift_db_name,
+                                              redshift_username, redshift_password,
+                                              redshift_db_table_name,
+                                              s3_bucket_arn, s3_kms_key_arn, s3_role_arn,
+                                              s3_buffering_seconds=300, s3_buffering_size=5,
+                                              s3_compression_format='GZIP', s3_log_group_name='firehose-streams'):
+    """Add Kinesus Redshift Firehose Resource with another Kinesis Stream as source and json as payload."""
+    return stack.stack.add_resource(DeliveryStream(
+        '{0}Firehose'.format(name.replace('-', '')),
+        DeliveryStreamName=name,
+        DeliveryStreamType='KinesisStreamAsSource',
+        KinesisStreamSourceConfiguration=KinesisStreamSourceConfiguration(
+            KinesisStreamARN=source_stream_arn,
+            RoleARN=source_stream_role_arn
+        ),
+        RedshiftDestinationConfiguration=RedshiftDestinationConfiguration(
+            ClusterJDBCURL='jdbc:redshift://{0}/{1}'.format(redshift_host_port, redshift_db_name),
+            CopyCommand=CopyCommand(
+                CopyOptions="JSON 'auto'",
+                DataTableName=redshift_db_table_name,
+            ),
+            Password=redshift_password,
+            RoleARN=firehose_arn,
+            S3Configuration=S3Configuration(
+                BucketARN=s3_bucket_arn,
+                Prefix=name,
+                BufferingHints=BufferingHints(IntervalInSeconds=s3_buffering_seconds, SizeInMBs=s3_buffering_size),
+                CompressionFormat=s3_compression_format,
+                EncryptionConfiguration=EncryptionConfiguration(
+                    KMSEncryptionConfig=KMSEncryptionConfig(
+                        AWSKMSKeyARN=s3_kms_key_arn)),
+                CloudWatchLoggingOptions=CloudWatchLoggingOptions(
+                    Enabled=True,
+                    LogGroupName=s3_log_group_name,
+                    LogStreamName=name),
+                RoleARN=s3_role_arn),
+            Username=redshift_username)
+        ))
 
 def create_cache_cluster(stack, name, cache_type, vpc, cidrs, subnet_ids, instance_type, num_cache_clusters):
     """Add Elasticache Cache cluster Resource."""

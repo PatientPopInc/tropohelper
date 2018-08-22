@@ -47,7 +47,7 @@ def create_kinesis_stream(stack, name, shard_count):
 
 def create_json_redshift_firehose_from_stream(stack, name, firehose_arn,
                                               source_stream_arn, source_stream_role_arn,
-                                              redshift_host_port, redshift_db_name,
+                                              redshift_cluster_jdbc_url_param,
                                               redshift_username, redshift_password,
                                               redshift_db_table_name,
                                               s3_bucket_arn, s3_kms_key_arn, s3_role_arn,
@@ -63,7 +63,7 @@ def create_json_redshift_firehose_from_stream(stack, name, firehose_arn,
             RoleARN=source_stream_role_arn
         ),
         RedshiftDestinationConfiguration=RedshiftDestinationConfiguration(
-            ClusterJDBCURL='jdbc:redshift://{0}/{1}'.format(redshift_host_port, redshift_db_name),
+            ClusterJDBCURL=redshift_cluster_jdbc_url_param,
             CopyCommand=CopyCommand(
                 CopyOptions="JSON 'auto'",
                 DataTableName=redshift_db_table_name,

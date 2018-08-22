@@ -23,7 +23,7 @@ class test_stack(object):
 
         create_json_redshift_firehose_from_stream(self.stack, 'firehose1', 'firehose_arn',
                                                   'arn:aws:kinesis:::stream1Stream', 'arn:aws:role:::role1',
-                                                  'localhost:123', 'redshift_db1',
+                                                  'jdbc:redshift://localhost:123/redshift_db1',
                                                   'redshift_username', 'redshift_password',
                                                   'redshift_db_table1',
                                                   'arn:aws:s3:::bucket1',

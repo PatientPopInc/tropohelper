@@ -147,13 +147,19 @@ def populate_routes(stack, routes):
                     RouteTableId=Ref(tables[route['routetable']])
                 ))
         elif "vpc_peer" in route.keys():
-            stack.stack.add_resource(
-                Route(
-                    '{0}{1}'.format(route['route'], route['routetable']),
-                    VpcPeeringConnectionId=route['vpc_peer'],
-                    DestinationCidrBlock='{0}'.format(route['cidrblock']),
-                    RouteTableId=Ref(tables[route['routetable']])
-                ))
+            create_peer_route(stack, '{0}{1}'.format(route['route'], route['routetable']),
+                              route['vpc_peer'], '{0}'.format(route['cidrblock']),
+                              Ref(tables[route['routetable']]))
+
+
+def create_peer_route(stack, name, peer, destination_cidr, route_table):
+    stack.stack.add_resource(
+        Route(
+            '{0}'.format(name),
+            VpcPeeringConnectionId=peer,
+            DestinationCidrBlock=destination_cidr,
+            RouteTableId=route_table
+        ))
 
 
 def create_frontend_elb(stack, cert=None):

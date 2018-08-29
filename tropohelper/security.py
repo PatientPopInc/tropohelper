@@ -7,7 +7,7 @@ from awacs.sts import AssumeRole
 from awacs.aws import Action, Allow, Policy, Principal, Statement
 
 
-def create_iam_role(stack, role_name, managed_policies=(), instance_profile=False):
+def create_iam_role(stack, role_name, managed_policies=(), instance_profile=False, service=['ec2.amazonaws.com']):
     """Add IAM role resource."""
     managed_policy_arns = ['arn:aws:iam::aws:policy/{0}'.format(policy)
                            for policy in managed_policies]
@@ -20,7 +20,7 @@ def create_iam_role(stack, role_name, managed_policies=(), instance_profile=Fals
                 Statement(
                     Effect=Allow,
                     Action=[AssumeRole],
-                    Principal=Principal('Service', ['ec2.amazonaws.com'])
+                    Principal=Principal('Service', service)
                 )
             ])
         ))

@@ -52,7 +52,9 @@ def create_json_redshift_firehose_from_stream(stack, name, firehose_arn,
                                               redshift_db_table_name,
                                               s3_bucket_arn, s3_kms_key_arn, s3_role_arn,
                                               s3_buffering_seconds=300, s3_buffering_size=5,
-                                              s3_compression_format='GZIP', s3_log_group_name='firehose-streams'):
+                                              s3_compression_format='GZIP',
+                                              s3_log_group_name='firehose-streams',
+                                              redshift_log_group_name='redshift-firehose'):
     """Add Kinesus Redshift Firehose Resource with another Kinesis Stream as source and json as payload."""
     return stack.stack.add_resource(DeliveryStream(
         '{0}Firehose'.format(name.replace('-', '')),
@@ -63,6 +65,10 @@ def create_json_redshift_firehose_from_stream(stack, name, firehose_arn,
             RoleARN=source_stream_role_arn
         ),
         RedshiftDestinationConfiguration=RedshiftDestinationConfiguration(
+            CloudWatchLoggingOptions=CloudWatchLoggingOptions(
+                Enabled=True,
+                LogGroupName=redshift_log_group_name,
+                LogStreamName=name),
             ClusterJDBCURL=redshift_cluster_jdbc_url_param,
             CopyCommand=CopyCommand(
                 CopyOptions="JSON 'auto'",

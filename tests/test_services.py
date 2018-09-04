@@ -57,7 +57,12 @@ class test_stack(object):
         assert s3_configuration['Prefix'] == 'firehose1'
         assert s3_configuration['BucketARN'] == 'arn:aws:s3:::bucket1'
 
-        cloud_watch_logging_options = s3_configuration['CloudWatchLoggingOptions']
-        assert cloud_watch_logging_options['Enabled'] == 'true'
-        assert cloud_watch_logging_options['LogGroupName'] == 'firehose-streams'
-        assert cloud_watch_logging_options['LogStreamName'] == 'firehose1'
+        s3_cloud_watch_logging_options = s3_configuration['CloudWatchLoggingOptions']
+        assert s3_cloud_watch_logging_options['Enabled'] == 'true'
+        assert s3_cloud_watch_logging_options['LogGroupName'] == 'firehose-streams'
+        assert s3_cloud_watch_logging_options['LogStreamName'] == 'firehose1'
+
+        redshift_cloud_watch_logging_options = redshift_destination_configuration['CloudWatchLoggingOptions']
+        assert redshift_cloud_watch_logging_options['Enabled'] == 'true'
+        assert redshift_cloud_watch_logging_options['LogGroupName'] == 'redshift-firehose'
+        assert redshift_cloud_watch_logging_options['LogStreamName'] == 'firehose1'

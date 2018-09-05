@@ -46,7 +46,7 @@ class test_stack(object):
 
         copy_command = redshift_destination_configuration['CopyCommand']
         assert copy_command['DataTableName'] == 'redshift_db_table1'
-        assert copy_command['CopyOptions'] == "JSON 'auto'"
+        assert copy_command['CopyOptions'] == "JSON 'auto' GZIP"
 
         s3_configuration = redshift_destination_configuration['S3Configuration']
         assert s3_configuration['RoleARN'] == 'arn:aws:iam::1234:role/firehose_delivery_role'

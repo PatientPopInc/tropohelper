@@ -71,7 +71,7 @@ def create_json_redshift_firehose_from_stream(stack, name, firehose_arn,
                 LogStreamName=name),
             ClusterJDBCURL=redshift_cluster_jdbc_url_param,
             CopyCommand=CopyCommand(
-                CopyOptions="JSON 'auto'",
+                CopyOptions="JSON 'auto' " + s3_compression_format,
                 DataTableName=redshift_db_table_name,
             ),
             Password=redshift_password,

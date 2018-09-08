@@ -42,7 +42,8 @@ def create_kinesis_stream(stack, name, shard_count):
     """Add Kinesis Stream with the specified shard count and default retention period."""
     return stack.stack.add_resource(Stream(
         '{0}Stream'.format(name.replace('-', '')),
-        ShardCount=shard_count
+        ShardCount=shard_count,
+        Name='{0}Stream'.format(name)
     ))
 
 def create_json_redshift_firehose_from_stream(stack, name, firehose_arn,

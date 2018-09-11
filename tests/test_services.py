@@ -1,7 +1,13 @@
 import json
 from nose import with_setup
-from troposphere import Template
-from tropohelper.services import create_kinesis_stream, create_json_redshift_firehose_from_stream
+from troposphere import Template, GetAtt
+from tropohelper.services import (
+    create_kinesis_stream,
+    create_json_redshift_firehose_from_stream,
+    create_cloud_watch_logs_metric_filter,
+    create_sns_topic,
+    create_sns_notification_alarm
+)
 
 class test_stack(object):
     """Test stack."""
@@ -46,7 +52,7 @@ class test_stack(object):
 
         copy_command = redshift_destination_configuration['CopyCommand']
         assert copy_command['DataTableName'] == 'redshift_db_table1'
-        assert copy_command['CopyOptions'] == "JSON 'auto'"
+        assert copy_command['CopyOptions'] == "JSON 'auto' GZIP"
 
         s3_configuration = redshift_destination_configuration['S3Configuration']
         assert s3_configuration['RoleARN'] == 'arn:aws:iam::1234:role/firehose_delivery_role'
@@ -66,3 +72,37 @@ class test_stack(object):
         assert redshift_cloud_watch_logging_options['Enabled'] == 'true'
         assert redshift_cloud_watch_logging_options['LogGroupName'] == 'redshift-firehose'
         assert redshift_cloud_watch_logging_options['LogStreamName'] == 'firehose1'
+
+    def test_create_email_notification_alarm_for_cloud_watch_logs_metric(self):
+        """Test creating email notification alarm for cloud watch logs metric."""
+
+        create_cloud_watch_logs_metric_filter(self.stack, 'metric-1', 'log_group_1', 'error')
+        assert self.stack.stack.to_dict()['Resources']['metric1MetricFilter']['Type'] == 'AWS::Logs::MetricFilter'
+        assert self.stack.stack.to_dict()['Resources']['metric1MetricFilter']['Properties']['FilterPattern'] == 'error'
+        assert self.stack.stack.to_dict()['Resources']['metric1MetricFilter']['Properties']['LogGroupName'] == 'log_group_1'
+        assert self.stack.stack.to_dict()['Resources']['metric1MetricFilter']['Properties']['MetricTransformations'][0]['DefaultValue'] == 0.0
+        assert self.stack.stack.to_dict()['Resources']['metric1MetricFilter']['Properties']['MetricTransformations'][0]['MetricName'] == 'metric1Metric'
+        assert self.stack.stack.to_dict()['Resources']['metric1MetricFilter']['Properties']['MetricTransformations'][0]['MetricNamespace'] == 'LogMetrics'
+        assert self.stack.stack.to_dict()['Resources']['metric1MetricFilter']['Properties']['MetricTransformations'][0]['MetricValue'] == '1'
+
+        create_sns_topic(self.stack, 'topic-1', 'https://events.pagerduty.com/integration/1234/enqueue')
+        assert self.stack.stack.to_dict()['Resources']['topic1Topic']['Type'] == 'AWS::SNS::Topic'
+        assert self.stack.stack.to_dict()['Resources']['topic1Topic']['Properties']['DisplayName'] == 'topic-1'
+        assert self.stack.stack.to_dict()['Resources']['topic1Topic']['Properties']['Subscription'][0]['Endpoint'] == 'https://events.pagerduty.com/integration/1234/enqueue'
+        assert self.stack.stack.to_dict()['Resources']['topic1Topic']['Properties']['Subscription'][0]['Protocol'] == 'https'
+        assert self.stack.stack.to_dict()['Resources']['topic1Topic']['Properties']['TopicName'] == 'topic-1Topic'
+
+        create_sns_notification_alarm(self.stack, 'alarm-1', 'description for alarm_1',
+                                      'metric1', 'LogMetrics',
+                                      GetAtt(self.stack.stack.to_dict()['Resources']['topic1Topic'], 'Arn'))
+        assert self.stack.stack.to_dict()['Resources']['alarm1Alarm']['Type'] == 'AWS::CloudWatch::Alarm'
+        assert self.stack.stack.to_dict()['Resources']['alarm1Alarm']['Properties']['AlarmName'] == 'alarm-1Alarm'
+        assert self.stack.stack.to_dict()['Resources']['alarm1Alarm']['Properties']['AlarmDescription'] == 'description for alarm_1'
+        assert self.stack.stack.to_dict()['Resources']['alarm1Alarm']['Properties']['AlarmActions'][0]['Fn::GetAtt'][0]['Properties']['TopicName'] == 'topic-1Topic'
+        assert self.stack.stack.to_dict()['Resources']['alarm1Alarm']['Properties']['ComparisonOperator'] == 'GreaterThanThreshold'
+        assert self.stack.stack.to_dict()['Resources']['alarm1Alarm']['Properties']['EvaluationPeriods'] == '1'
+        assert self.stack.stack.to_dict()['Resources']['alarm1Alarm']['Properties']['MetricName'] == 'metric1Metric'
+        assert self.stack.stack.to_dict()['Resources']['alarm1Alarm']['Properties']['Namespace'] == 'LogMetrics'
+        assert self.stack.stack.to_dict()['Resources']['alarm1Alarm']['Properties']['Period'] == '60'
+        assert self.stack.stack.to_dict()['Resources']['alarm1Alarm']['Properties']['Statistic'] == 'Minimum'
+        assert self.stack.stack.to_dict()['Resources']['alarm1Alarm']['Properties']['Threshold'] == '0'

@@ -11,6 +11,9 @@ from troposphere.firehose import (
     S3DestinationConfiguration,
     KinesisStreamSourceConfiguration
 )
+from troposphere.cloudwatch import Alarm
+from troposphere.logs import MetricFilter, MetricTransformation
+from troposphere.sns import Topic, Subscription
 from troposphere.kinesis import Stream
 from troposphere.ec2 import SecurityGroupRule, SecurityGroup
 import troposphere.elasticache as elasticache
@@ -42,7 +45,8 @@ def create_kinesis_stream(stack, name, shard_count):
     """Add Kinesis Stream with the specified shard count and default retention period."""
     return stack.stack.add_resource(Stream(
         '{0}Stream'.format(name.replace('-', '')),
-        ShardCount=shard_count
+        ShardCount=shard_count,
+        Name='{0}Stream'.format(name)
     ))
 
 def create_json_redshift_firehose_from_stream(stack, name, firehose_arn,
@@ -71,7 +75,7 @@ def create_json_redshift_firehose_from_stream(stack, name, firehose_arn,
                 LogStreamName=name),
             ClusterJDBCURL=redshift_cluster_jdbc_url_param,
             CopyCommand=CopyCommand(
-                CopyOptions="JSON 'auto'",
+                CopyOptions="JSON 'auto' " + s3_compression_format,
                 DataTableName=redshift_db_table_name,
             ),
             Password=redshift_password,
@@ -91,6 +95,62 @@ def create_json_redshift_firehose_from_stream(stack, name, firehose_arn,
                 RoleARN=s3_role_arn),
             Username=redshift_username)
         ))
+
+def create_cloud_watch_logs_metric_filter(stack, name, log_group_name, filter_pattern,
+                                          metric_namespace='LogMetrics', metric_value='1', metric_default_value=0.0):
+    """Add a Cloud Watch logs metric filter pointing to an existing log group."""
+    return stack.stack.add_resource(MetricFilter(
+        '{0}MetricFilter'.format(name.replace('-', '')),
+        FilterPattern=filter_pattern,
+        LogGroupName=log_group_name,
+        MetricTransformations=[
+            MetricTransformation(
+                DefaultValue=metric_default_value,
+                MetricName='{0}Metric'.format(name.replace('-', '')),
+                MetricNamespace=metric_namespace,
+                MetricValue=metric_value
+            )
+        ]
+    ))
+
+def create_sns_topic(stack, name, endpoint, protocol='https'):
+    """Add a SNS topic."""
+    return stack.stack.add_resource(Topic(
+        '{0}Topic'.format(name.replace('-', '')),
+        DisplayName=name,
+        Subscription=[
+            Subscription(
+                Endpoint=endpoint,
+                Protocol=protocol
+            )
+        ],
+        TopicName='{0}Topic'.format(name)
+    ))
+
+def create_sns_notification_alarm(stack, name, description,
+                                  metric_name, metric_namespace,
+                                  sns_topic_arn,
+                                  comparison_operator='GreaterThanThreshold',
+                                  threshold='0',
+                                  evaluation_periods='1',
+                                  period_secs='60',
+                                  statistic='Minimum'):
+    """Add a SNS notification alarm for a cloud watch log metric which triggers alarm based on the specified criteria."""
+    return stack.stack.add_resource(Alarm(
+        '{0}Alarm'.format(name.replace('-', '')),
+        AlarmName='{0}Alarm'.format(name),
+        AlarmDescription=description,
+        AlarmActions=[
+            sns_topic_arn
+        ],
+        ComparisonOperator=comparison_operator,
+        EvaluationPeriods=evaluation_periods,
+        MetricName='{0}Metric'.format(metric_name.replace('-', '')),
+        Namespace=metric_namespace,
+        Period=period_secs,
+        Statistic=statistic,
+        Threshold=threshold
+    ))
 
 def create_cache_cluster(stack, name, cache_type, vpc, cidrs, subnet_ids, instance_type, num_cache_clusters):
     """Add Elasticache Cache cluster Resource."""

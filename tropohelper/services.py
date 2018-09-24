@@ -12,7 +12,7 @@ from troposphere.firehose import (
     KinesisStreamSourceConfiguration
 )
 from troposphere.cloudwatch import Alarm
-from troposphere.logs import MetricFilter, MetricTransformation, LogGroup
+from troposphere.logs import MetricFilter, MetricTransformation, LogGroup, LogStream
 from troposphere.sns import Topic, Subscription
 from troposphere.kinesis import Stream
 from troposphere.ec2 import SecurityGroupRule, SecurityGroup
@@ -57,6 +57,8 @@ def create_json_redshift_firehose_from_stream(stack, name, firehose_arn,
                                               redshift_username, redshift_password,
                                               redshift_db_table_name,
                                               log_group_name,
+                                              redshift_log_stream,
+                                              s3_log_stream,
                                               s3_bucket_arn, s3_kms_key_arn, s3_role_arn,
                                               s3_buffering_seconds=300, s3_buffering_size=5,
                                               s3_compression_format='GZIP'):
@@ -74,7 +76,7 @@ def create_json_redshift_firehose_from_stream(stack, name, firehose_arn,
             CloudWatchLoggingOptions=CloudWatchLoggingOptions(
                 Enabled=True,
                 LogGroupName=log_group_name,
-                LogStreamName=name),
+                LogStreamName=redshift_log_stream),
             ClusterJDBCURL=redshift_cluster_jdbc_url_param,
             CopyCommand=CopyCommand(
                 CopyOptions="JSON 'auto' " + s3_compression_format,
@@ -93,7 +95,7 @@ def create_json_redshift_firehose_from_stream(stack, name, firehose_arn,
                 CloudWatchLoggingOptions=CloudWatchLoggingOptions(
                     Enabled=True,
                     LogGroupName=log_group_name,
-                    LogStreamName=name),
+                    LogStreamName=s3_log_stream),
                 RoleARN=s3_role_arn),
             Username=redshift_username)
     ))
@@ -118,13 +120,27 @@ def create_cloud_watch_logs_metric_filter(stack, name, log_group_name, filter_pa
     ))
 
 
-def create_log_group(stack, name, retention_in_days=7):
+def create_log_group(stack, name, custom_name=False, retention_in_days=7):
     """Add a log group."""
-    return stack.stack.add_resource(LogGroup(
-        '{0}LogGroup'.format(name.replace('-', '')),
-        LogGroupName='{0}LogGroup'.format(name.replace('-', '')),
-        RetentionInDays=retention_in_days
-    ))
+    lg = LogGroup(
+            '{0}LogGroup'.format(name.replace('-', '')),
+            RetentionInDays=retention_in_days
+            )
+    if custom_name == True:
+        lg.LogGroupName = '{0}LogGroup'.format(name)
+
+    return stack.stack.add_resource(lg)
+
+
+def create_log_stream(stack, log_group, name, custom_name=False):
+    ls = LogStream(
+            '{0}LogStream'.format(name.replace('-', '')),
+            LogGroupName=log_group
+            )
+    if custom_name == True:
+        ls.LogStreamName='{0}LogStream'.format(name)
+
+    return stack.stack.add_resource(ls)
 
 
 def create_sns_topic(stack, name, endpoint, protocol='https'):

@@ -5,7 +5,8 @@ from tropohelper.services import (
     create_cloud_watch_logs_metric_filter,
     create_sns_topic,
     create_sns_notification_alarm,
-    create_log_group
+    create_log_group,
+    create_log_stream
 )
 
 class test_stack(object):
@@ -23,10 +24,11 @@ class test_stack(object):
         """Test creating json redshift firehose from Kinesis stream."""
 
         log_group = create_log_group(self.stack, 'log-group-1')
+        redshift_log_stream = create_log_stream(self.stack, Ref(log_group), 'Redshift')
+        s3_log_stream = create_log_stream(self.stack, Ref(log_group), 'S3')
 
         assert self.stack.stack.to_dict()['Resources']['loggroup1LogGroup']['Type'] == 'AWS::Logs::LogGroup'
         redshift_log_group_properties = self.stack.stack.to_dict()['Resources']['loggroup1LogGroup']['Properties']
-        assert redshift_log_group_properties['LogGroupName'] == 'loggroup1LogGroup'
         assert redshift_log_group_properties['RetentionInDays'] == 7
 
         create_kinesis_stream(self.stack, 'stream1', 5)
@@ -39,6 +41,8 @@ class test_stack(object):
                                                   'redshift_username', 'redshift_password',
                                                   'redshift_db_table1',
                                                   Ref(log_group),
+                                                  Ref(redshift_log_stream),
+                                                  Ref(s3_log_stream),
                                                   'arn:aws:s3:::bucket1',
                                                   'arn:aws:kms:us-east-1:1234',
                                                   'arn:aws:iam::1234:role/firehose_delivery_role')
@@ -50,7 +54,6 @@ class test_stack(object):
         assert kinesis_stream_source_configuration['KinesisStreamARN'] == 'arn:aws:kinesis:::stream1Stream'
 
         assert properties['DeliveryStreamType'] == 'KinesisStreamAsSource'
-        assert properties['DeliveryStreamName'] == 'firehose1'
 
         redshift_destination_configuration = properties['RedshiftDestinationConfiguration']
         assert redshift_destination_configuration['Username'] == 'redshift_username'
@@ -72,13 +75,9 @@ class test_stack(object):
 
         s3_cloud_watch_logging_options = s3_configuration['CloudWatchLoggingOptions']
         assert s3_cloud_watch_logging_options['Enabled'] == 'true'
-        assert s3_cloud_watch_logging_options['LogGroupName']['Ref'] == 'loggroup1LogGroup'
-        assert s3_cloud_watch_logging_options['LogStreamName'] == 'firehose1'
 
         redshift_cloud_watch_logging_options = redshift_destination_configuration['CloudWatchLoggingOptions']
         assert redshift_cloud_watch_logging_options['Enabled'] == 'true'
-        assert redshift_cloud_watch_logging_options['LogGroupName']['Ref'] == 'loggroup1LogGroup'
-        assert redshift_cloud_watch_logging_options['LogStreamName'] == 'firehose1'
 
     def test_create_email_notification_alarm_for_cloud_watch_logs_metric(self):
         """Test creating email notification alarm for cloud watch logs metric."""
@@ -87,7 +86,6 @@ class test_stack(object):
 
         assert self.stack.stack.to_dict()['Resources']['loggroup1LogGroup']['Type'] == 'AWS::Logs::LogGroup'
         redshift_log_group_properties = self.stack.stack.to_dict()['Resources']['loggroup1LogGroup']['Properties']
-        assert redshift_log_group_properties['LogGroupName'] == 'loggroup1LogGroup'
         assert redshift_log_group_properties['RetentionInDays'] == 7
 
         create_cloud_watch_logs_metric_filter(self.stack, 'metric-1', Ref(log_group), 'error')

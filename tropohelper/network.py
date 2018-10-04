@@ -196,7 +196,7 @@ def create_frontend_elb(stack, cert=None):
         ))
 
 
-def create_target_group(stack, name, port, protocol='HTTPS', targets=[]):
+def create_target_group(stack, name, port, protocol='HTTPS', targets=[], http_codes='200'):
     """Add Target Group Resource."""
     return stack.stack.add_resource(alb.TargetGroup(
         '{0}TargetGroup'.format(name),
@@ -205,7 +205,7 @@ def create_target_group(stack, name, port, protocol='HTTPS', targets=[]):
         HealthCheckTimeoutSeconds="10",
         HealthyThresholdCount="4",
         Matcher=alb.Matcher(
-            HttpCode="200"),
+            HttpCode=http_codes),
         Name='{0}Target'.format(name),
         Port=port,
         Protocol=protocol,

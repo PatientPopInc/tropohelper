@@ -196,33 +196,48 @@ def create_frontend_elb(stack, cert=None):
         ))
 
 
-def create_target_group(stack, name, port, protocol='HTTPS', targets=[], http_codes='200', health_check_path='/'):
+def create_target_group(stack, name, port, protocol='HTTPS', targets=[], http_codes='200', health_check_path='/', target_type='instance'):
     """Add Target Group Resource."""
+    if http_codes is not None:
+        return stack.stack.add_resource(alb.TargetGroup(
+            '{0}TargetGroup'.format(name),
+            HealthCheckIntervalSeconds="30",
+            HealthCheckProtocol=protocol,
+            HealthCheckTimeoutSeconds="10",
+            HealthyThresholdCount="4",
+            HealthCheckPath=health_check_path,
+            Matcher=alb.Matcher(HttpCode=http_codes),
+            Name='{0}Target'.format(name),
+            Port=port,
+            Protocol=protocol,
+            Targets=targets,
+            UnhealthyThresholdCount="3",
+            TargetType=target_type,
+            VpcId=Ref(stack.vpc)))
+
     return stack.stack.add_resource(alb.TargetGroup(
         '{0}TargetGroup'.format(name),
         HealthCheckIntervalSeconds="30",
         HealthCheckProtocol=protocol,
         HealthCheckTimeoutSeconds="10",
-        HealthyThresholdCount="4",
-        HealthCheckPath=health_check_path,
-        Matcher=alb.Matcher(
-            HttpCode=http_codes),
+        HealthyThresholdCount="3",
         Name='{0}Target'.format(name),
         Port=port,
         Protocol=protocol,
         Targets=targets,
         UnhealthyThresholdCount="3",
+        TargetType=target_type,
         VpcId=Ref(stack.vpc)
     ))
 
 
-def create_alb(stack, name, subnets=[], security_groups=[], condition_field=""):
+def create_alb(stack, name, subnets=[], security_groups=[], condition_field="", scheme='internet-facing'):
     """Add Application Loadbalancer Resource."""
     return stack.stack.add_resource(alb.LoadBalancer(
         '{0}ALB'.format(name),
         Condition=condition_field,
         Name="{0}ALB".format(name),
-        Scheme="internet-facing",
+        Scheme=scheme,
         SecurityGroups=security_groups,
         Subnets=subnets))
 

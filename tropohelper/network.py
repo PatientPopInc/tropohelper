@@ -212,7 +212,6 @@ def create_target_group(stack, name, port, protocol='HTTPS', targets=[], http_co
             Protocol=protocol,
             Targets=targets,
             UnhealthyThresholdCount="3",
-            TargetType=target_type,
             VpcId=Ref(stack.vpc)))
 
     return stack.stack.add_resource(alb.TargetGroup(

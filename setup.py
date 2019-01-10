@@ -18,7 +18,7 @@ setup(
     author_email='michael@michaeljgorman.com',
     url='https://github.com/mjgorman/tropohelper',
     packages=find_packages(),
-    install_requires=['troposphere>=2.2.0', 'awacs>=0.7.2'],
+    install_requires=['troposphere==2.4.0', 'awacs>=0.7.2'],
     test_suite='nose.collector',
     tests_require=['nose<2.0']
 )

@@ -72,7 +72,8 @@ def create_dbpass_param(stack):
             "DbPassParam",
             Type="String",
             Description="The db admin password",
-            Default=""
+            Default="",
+            NoEcho=True
         ))
 
 

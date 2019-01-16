@@ -199,10 +199,16 @@ def create_cache_cluster(stack, name, cache_type, vpc, cidrs, subnet_ids, instan
             ToPort=ports[cache_type],
             IpProtocol="tcp",
         ))
+
     secgroup = stack.stack.add_resource(SecurityGroup(
         '{0}{1}SecurityGroup'.format(name.replace('-', ''), cache_type),
         GroupDescription="{0} {1} Security Group".format(name, cache_type),
         SecurityGroupIngress=ingress,
+        SecurityGroupEgress=[SecurityGroupRule(
+            "{0}egress".format(name.replace('-', '')),
+            CidrIp="0.0.0.0/0",
+            IpProtocol="tcp"
+            )],
         VpcId=vpc,
     ))
 

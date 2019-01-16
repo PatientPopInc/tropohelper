@@ -72,7 +72,6 @@ def create_dbpass_param(stack):
             "DbPassParam",
             Type="String",
             Description="The db admin password",
-            Default="",
             NoEcho=True
         ))
 
@@ -121,6 +120,5 @@ def create_misc_string_param(stack, name, description="String", no_echo=False):
             '{0}StringParam'.format(name),
             Description='{0}'.format(description),
             Type='String',
-            Default='',
             NoEcho=no_echo
         ))

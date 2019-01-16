@@ -114,7 +114,7 @@ def create_cache_instance_type_param(stack, name):
         ))
 
 
-def create_misc_string_param(stack, name, description="String"):
+def create_misc_string_param(stack, name, description="String", no_echo=False):
     """Create a Misc. String parameter."""
     return stack.stack.add_parameter(
         Parameter(
@@ -122,4 +122,5 @@ def create_misc_string_param(stack, name, description="String"):
             Description='{0}'.format(description),
             Type='String',
             Default='',
+            NoEcho=no_echo
         ))

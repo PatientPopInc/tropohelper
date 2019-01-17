@@ -120,7 +120,7 @@ def create_security_group(stack, name, rules=()):
             SecurityGroupEgress=[SecurityGroupRule(
                 "{0}egress".format(name.replace('-', '')),
                 CidrIp="0.0.0.0/0",
-                IpProtocol="tcp")],
+                IpProtocol="-1")],
             VpcId=Ref(stack.vpc),
         ))
 

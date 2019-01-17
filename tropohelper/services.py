@@ -207,7 +207,7 @@ def create_cache_cluster(stack, name, cache_type, vpc, cidrs, subnet_ids, instan
         SecurityGroupEgress=[SecurityGroupRule(
             "{0}egress".format(name.replace('-', '')),
             CidrIp="0.0.0.0/0",
-            IpProtocol="tcp"
+            IpProtocol="-1"
             )],
         VpcId=vpc,
     ))

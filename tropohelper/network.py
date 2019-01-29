@@ -1,28 +1,34 @@
-from troposphere import Ref, GetAtt
-from troposphere.ec2 import VPC, RouteTable, Route, InternetGateway, NatGateway, \
- EIP, Subnet, SubnetRouteTableAssociation, VPCGatewayAttachment, VPCPeeringConnection
-from troposphere.rds import DBSubnetGroup
 import troposphere.elasticloadbalancing as elb
 import troposphere.elasticloadbalancingv2 as alb
+from troposphere import GetAtt, Ref
+from troposphere.ec2 import (EIP, VPC, InternetGateway, NatGateway, Route,
+                             RouteTable, Subnet, SubnetRouteTableAssociation,
+                             VPCGatewayAttachment, VPCPeeringConnection)
+from troposphere.rds import DBSubnetGroup
 from troposphere.route53 import HostedZone, RecordSetType
 
 
 def create_vpc(stack, name):
     """Add VPC Resource."""
+
     return stack.stack.add_resource(
         VPC(
             '{0}VPC'.format(name),
-            EnableDnsSupport="true",
+            EnableDnsSupport='true',
             CidrBlock=Ref(stack.vpc_address_param),
-            EnableDnsHostnames="true",
+            EnableDnsHostnames='true',
             Tags=[
-                {'Key': 'Name', 'Value': '{0}'.format(name)},
+                {
+                    'Key': 'Name',
+                    'Value': '{0}'.format(name)
+                },
             ],
         ))
 
 
 def create_vpc_peer(stack, connection):
     """Add VPC Peering Connection Resource."""
+
     return stack.stack.add_resource(
         VPCPeeringConnection(
             '{0}VpcPeeringConnection'.format(connection.replace('-', '')),
@@ -33,11 +39,15 @@ def create_vpc_peer(stack, connection):
 
 def create_internet_gateway(stack):
     """Add VPC Internet Gateway Resource."""
+
     return stack.stack.add_resource(
         InternetGateway(
             'InternetGateway',
             Tags=[
-                {'Key': 'Name', 'Value': '{0}'.format(stack.env)},
+                {
+                    'Key': 'Name',
+                    'Value': '{0}'.format(stack.env)
+                },
             ],
         ))
 
@@ -46,7 +56,7 @@ def attach_gateway(stack):
     """Add VPC Gateway attachment Resource."""
     stack.stack.add_resource(
         VPCGatewayAttachment(
-            "GatewayAttachment",
+            'GatewayAttachment',
             VpcId=Ref(stack.vpc),
             InternetGatewayId=Ref(stack.internet_gateway),
         ))
@@ -54,25 +64,28 @@ def attach_gateway(stack):
 
 def create_elastic_ip(stack, name):
     """Add VPC Elastic IP Resource."""
-    return stack.stack.add_resource(
-        EIP(
-            '{0}eip'.format(name)
-        ))
+
+    return stack.stack.add_resource(EIP('{0}eip'.format(name)))
 
 
 def associate_routes(stack, subnet_list=()):
     """Add Route Association Resources."""
+
     for association in subnet_list:
         stack.stack.add_resource(
             SubnetRouteTableAssociation(
                 '{0}RouteAssociation'.format(association['name']),
                 SubnetId=Ref(association['subnet']),
-                RouteTableId=Ref(association['route_table'])
-            ))
+                RouteTableId=Ref(association['route_table'])))
 
 
-def create_subnet(stack, name, subnet_cidr, avail_zone='us-east-1a', public_ip=False):
+def create_subnet(stack,
+                  name,
+                  subnet_cidr,
+                  avail_zone='us-east-1a',
+                  public_ip=False):
     """Add VPC Subnet Resource."""
+
     return stack.stack.add_resource(
         Subnet(
             '{0}Subnet'.format(name),
@@ -81,40 +94,53 @@ def create_subnet(stack, name, subnet_cidr, avail_zone='us-east-1a', public_ip=F
             AvailabilityZone=avail_zone,
             VpcId=Ref(stack.vpc),
             Tags=[
-                {'Key': 'Name', 'Value': '{0}{1}'.format(stack.env, name)},
+                {
+                    'Key': 'Name',
+                    'Value': '{0}{1}'.format(stack.env, name)
+                },
             ],
         ))
 
+
 def create_db_subnet(stack, name, description, subnet_ids=()):
     """Add DB Subnet Resource."""
+
     return stack.stack.add_resource(
         DBSubnetGroup(
             '{0}DBSubnet'.format(name),
-            DBSubnetGroupDescription="{0} Subnet Group".format(description),
-            SubnetIds=subnet_ids
-        ))
+            DBSubnetGroupDescription='{0} Subnet Group'.format(description),
+            SubnetIds=subnet_ids))
+
 
 def create_nat_gateway(stack):
     """Add VPC NAT Gateway Resource."""
+
     return stack.stack.add_resource(
         NatGateway(
             'Nat',
             AllocationId=GetAtt(stack.nat_eip, 'AllocationId'),
             SubnetId=Ref(stack.public1_subnet),
             Tags=[
-                {'Key': 'Name', 'Value': '{0}'.format(stack.env)},
+                {
+                    'Key': 'Name',
+                    'Value': '{0}'.format(stack.env)
+                },
             ],
         ))
 
 
 def create_route_table(stack, env, name):
     """Add VPC Route table Resource."""
+
     return stack.stack.add_resource(
         RouteTable(
             '{0}{1}RouteTable'.format(env, name),
             VpcId=Ref(stack.vpc),
             Tags=[
-                {'Key': 'Name', 'Value': '{0}{1}'.format(env, name)},
+                {
+                    'Key': 'Name',
+                    'Value': '{0}{1}'.format(env, name)
+                },
             ],
         ))
 
@@ -125,31 +151,28 @@ def populate_routes(stack, routes):
         'private': stack.private_route_table,
         'public': stack.public_route_table
     }
-    gateways = {
-        'igw': stack.internet_gateway,
-        'nat': stack.nat_gateway
-    }
+    gateways = {'igw': stack.internet_gateway, 'nat': stack.nat_gateway}
+
     for route in routes:
-        if route['route'] == "igw":
+        if route['route'] == 'igw':
             stack.stack.add_resource(
                 Route(
                     '{0}'.format(route['route']),
                     GatewayId=Ref(gateways[route['route']]),
                     DestinationCidrBlock='{0}'.format(route['cidrblock']),
-                    RouteTableId=Ref(tables[route['routetable']])
-                ))
-        elif route['route'] == "nat":
+                    RouteTableId=Ref(tables[route['routetable']])))
+        elif route['route'] == 'nat':
             stack.stack.add_resource(
                 Route(
                     '{0}'.format(route['route']),
                     NatGatewayId=Ref(gateways[route['route']]),
                     DestinationCidrBlock='{0}'.format(route['cidrblock']),
-                    RouteTableId=Ref(tables[route['routetable']])
-                ))
-        elif "vpc_peer" in route.keys():
-            create_peer_route(stack, '{0}{1}'.format(route['route'], route['routetable']),
-                              route['vpc_peer'], '{0}'.format(route['cidrblock']),
-                              Ref(tables[route['routetable']]))
+                    RouteTableId=Ref(tables[route['routetable']])))
+        elif 'vpc_peer' in route.keys():
+            create_peer_route(
+                stack, '{0}{1}'.format(route['route'], route['routetable']),
+                route['vpc_peer'], '{0}'.format(route['cidrblock']),
+                Ref(tables[route['routetable']]))
 
 
 def create_peer_route(stack, name, peer, destination_cidr, route_table):
@@ -158,138 +181,179 @@ def create_peer_route(stack, name, peer, destination_cidr, route_table):
             '{0}'.format(name),
             VpcPeeringConnectionId=peer,
             DestinationCidrBlock=destination_cidr,
-            RouteTableId=route_table
-        ))
+            RouteTableId=route_table))
 
 
 def create_frontend_elb(stack, cert=None):
     """Add EC2 ELB Resource."""
+
     return stack.stack.add_resource(
         elb.LoadBalancer(
             'ElasticLoadBalancer',
-            Subnets=[Ref(stack.frontend1_subnet), Ref(stack.frontend2_subnet)],
+            Subnets=[Ref(stack.frontend1_subnet),
+                     Ref(stack.frontend2_subnet)],
             Listeners=[
                 elb.Listener(
-                    LoadBalancerPort="80",
-                    InstancePort="80",
-                    Protocol="HTTP",
-                    InstanceProtocol="HTTP",
+                    LoadBalancerPort='80',
+                    InstancePort='80',
+                    Protocol='HTTP',
+                    InstanceProtocol='HTTP',
                 ),
                 elb.Listener(
-                    LoadBalancerPort="443",
-                    InstancePort="443",
-                    Protocol="HTTPS",
-                    InstanceProtocol="HTTPS",
+                    LoadBalancerPort='443',
+                    InstancePort='443',
+                    Protocol='HTTPS',
+                    InstanceProtocol='HTTPS',
                     SSLCertificateId=cert,
                 ),
             ],
             HealthCheck=elb.HealthCheck(
-                Target="SSL:443",
-                HealthyThreshold="5",
-                UnhealthyThreshold="2",
-                Interval="15",
-                Timeout="5",
+                Target='SSL:443',
+                HealthyThreshold='5',
+                UnhealthyThreshold='2',
+                Interval='15',
+                Timeout='5',
             ),
             CrossZone=True,
             SecurityGroups=[Ref(stack.frontend_security_group)],
-            Scheme="internet-facing",
+            Scheme='internet-facing',
         ))
 
 
-def create_target_group(stack, name, port, protocol='HTTPS', targets=[], http_codes='200', health_check_path='/', target_type='instance'):
+def create_target_group(stack,
+                        name,
+                        port,
+                        protocol='HTTPS',
+                        targets=[],
+                        http_codes='200',
+                        health_check_path='/',
+                        target_type='instance'):
     """Add Target Group Resource."""
+
     if http_codes is not None:
-        return stack.stack.add_resource(alb.TargetGroup(
+        return stack.stack.add_resource(
+            alb.TargetGroup(
+                '{0}TargetGroup'.format(name),
+                HealthCheckIntervalSeconds='30',
+                HealthCheckProtocol=protocol,
+                HealthCheckTimeoutSeconds='10',
+                HealthyThresholdCount='4',
+                HealthCheckPath=health_check_path,
+                Matcher=alb.Matcher(HttpCode=http_codes),
+                Name='{0}Target'.format(name),
+                Port=port,
+                Protocol=protocol,
+                Targets=targets,
+                UnhealthyThresholdCount='3',
+                VpcId=Ref(stack.vpc)))
+
+    return stack.stack.add_resource(
+        alb.TargetGroup(
             '{0}TargetGroup'.format(name),
-            HealthCheckIntervalSeconds="30",
+            HealthCheckIntervalSeconds='30',
             HealthCheckProtocol=protocol,
-            HealthCheckTimeoutSeconds="10",
-            HealthyThresholdCount="4",
-            HealthCheckPath=health_check_path,
-            Matcher=alb.Matcher(HttpCode=http_codes),
+            HealthCheckTimeoutSeconds='10',
+            HealthyThresholdCount='3',
             Name='{0}Target'.format(name),
             Port=port,
             Protocol=protocol,
             Targets=targets,
-            UnhealthyThresholdCount="3",
+            UnhealthyThresholdCount='3',
+            TargetType=target_type,
             VpcId=Ref(stack.vpc)))
 
-    return stack.stack.add_resource(alb.TargetGroup(
-        '{0}TargetGroup'.format(name),
-        HealthCheckIntervalSeconds="30",
-        HealthCheckProtocol=protocol,
-        HealthCheckTimeoutSeconds="10",
-        HealthyThresholdCount="3",
-        Name='{0}Target'.format(name),
-        Port=port,
-        Protocol=protocol,
-        Targets=targets,
-        UnhealthyThresholdCount="3",
-        TargetType=target_type,
-        VpcId=Ref(stack.vpc)
-    ))
 
-
-def create_alb(stack, name, subnets=[], security_groups=[], condition_field="", scheme='internet-facing'):
+def create_alb(stack,
+               name,
+               subnets=[],
+               security_groups=[],
+               condition_field='',
+               scheme='internet-facing'):
     """Add Application Loadbalancer Resource."""
-    return stack.stack.add_resource(alb.LoadBalancer(
-        '{0}ALB'.format(name),
-        Condition=condition_field,
-        Name="{0}ALB".format(name),
-        Scheme=scheme,
-        SecurityGroups=security_groups,
-        Subnets=subnets))
+
+    return stack.stack.add_resource(
+        alb.LoadBalancer(
+            '{0}ALB'.format(name),
+            Condition=condition_field,
+            Name='{0}ALB'.format(name),
+            Scheme=scheme,
+            SecurityGroups=security_groups,
+            Subnets=subnets))
 
 
-def create_alb_listener(stack, name, alb_arn, target_group, port=443, protocol='HTTPS', certificates=[], condition_field=""):
+def create_alb_listener(stack,
+                        name,
+                        alb_arn,
+                        target_group,
+                        port=443,
+                        protocol='HTTPS',
+                        certificates=[],
+                        condition_field=''):
     """Add ALB Listener Resource."""
-    certificate_arns = [alb.Certificate('{0}Cert'.format(name), CertificateArn=certificate_arn)
-                        for certificate_arn in certificates]
-    return stack.stack.add_resource(alb.Listener(
-        '{0}Listener'.format(name),
-        Condition=condition_field,
-        Port=port,
-        Protocol=protocol,
-        Certificates=certificate_arns,
-        LoadBalancerArn=alb_arn,
-        DefaultActions=[alb.Action(
-            Type="forward",
-            TargetGroupArn=target_group)]
-        ))
+    certificate_arns = [
+        alb.Certificate(
+            '{0}Cert'.format(name), CertificateArn=certificate_arn)
+
+        for certificate_arn in certificates
+    ]
+
+    return stack.stack.add_resource(
+        alb.Listener(
+            '{0}Listener'.format(name),
+            Condition=condition_field,
+            Port=port,
+            Protocol=protocol,
+            Certificates=certificate_arns,
+            LoadBalancerArn=alb_arn,
+            DefaultActions=[
+                alb.Action(Type='forward', TargetGroupArn=target_group)
+            ]))
 
 
-def create_alb_listener_rule(stack, name, listener, condition, target_group, priority=1, condition_field=""):
+def create_alb_listener_rule(stack,
+                             name,
+                             listener,
+                             condition,
+                             target_group,
+                             priority=1,
+                             condition_field=''):
     """Add ALB Listener Rule Resource."""
-    return stack.stack.add_resource(alb.ListenerRule(
-        '{0}ListenerRule'.format(name),
-        Condition=condition_field,
-        ListenerArn=listener,
-        Conditions=[alb.Condition(
-            Field=condition['field'],
-            Values=condition['values'])],
-        Actions=[alb.Action(
-            Type="forward",
-            TargetGroupArn=target_group
-        )],
-        Priority=priority
-    ))
+
+    return stack.stack.add_resource(
+        alb.ListenerRule(
+            '{0}ListenerRule'.format(name),
+            Condition=condition_field,
+            ListenerArn=listener,
+            Conditions=[
+                alb.Condition(
+                    Field=condition['field'], Values=condition['values'])
+            ],
+            Actions=[alb.Action(Type='forward', TargetGroupArn=target_group)],
+            Priority=priority))
 
 
 def create_hosted_zone(stack, name):
     """Add Route53 HostedZone Resource."""
-    return stack.stack.add_resource(HostedZone(
-        '{0}HostedZone'.format(name.replace('.', '')),
-        Name=name))
+
+    return stack.stack.add_resource(
+        HostedZone('{0}HostedZone'.format(name.replace('.', '')), Name=name))
 
 
-def create_or_update_dns_record(stack, record_name, record_type, record_value, hosted_zone_name, condition_field=""):
+def create_or_update_dns_record(stack,
+                                record_name,
+                                record_type,
+                                record_value,
+                                hosted_zone_name,
+                                condition_field=''):
     """Create or Update Route53 Record Resource."""
-    return stack.stack.add_resource(RecordSetType(
-        '{0}'.format(record_name.replace('.', '').replace('*', 'wildcard')),
-        Condition=condition_field,
-        HostedZoneName='{0}.'.format(hosted_zone_name),
-        Type=record_type,
-        TTL="60",
-        Name='{0}.'.format(record_name),
-        ResourceRecords=record_value
-    ))
+
+    return stack.stack.add_resource(
+        RecordSetType(
+            '{0}'.format(
+                record_name.replace('.', '').replace('*', 'wildcard')),
+            Condition=condition_field,
+            HostedZoneName='{0}.'.format(hosted_zone_name),
+            Type=record_type,
+            TTL='60',
+            Name='{0}.'.format(record_name),
+            ResourceRecords=record_value))

@@ -2,13 +2,11 @@ import troposphere.elasticache as elasticache
 from troposphere import Ref
 from troposphere.cloudwatch import Alarm
 from troposphere.ec2 import SecurityGroup, SecurityGroupRule
-from troposphere.firehose import (BufferingHints, CloudWatchLoggingOptions,
-                                  CopyCommand, DeliveryStream,
-                                  EncryptionConfiguration,
-                                  KinesisStreamSourceConfiguration,
-                                  KMSEncryptionConfig,
-                                  RedshiftDestinationConfiguration,
-                                  S3Configuration, S3DestinationConfiguration)
+from troposphere.firehose import (
+    BufferingHints, CloudWatchLoggingOptions, CopyCommand, DeliveryStream,
+    EncryptionConfiguration, KinesisStreamSourceConfiguration,
+    KMSEncryptionConfig, RedshiftDestinationConfiguration, S3Configuration,
+    S3DestinationConfiguration)
 from troposphere.kinesis import Stream
 from troposphere.logs import (LogGroup, LogStream, MetricFilter,
                               MetricTransformation)
@@ -92,7 +90,7 @@ def create_json_redshift_firehose_from_stream(stack,
                     LogStreamName=redshift_log_stream),
                 ClusterJDBCURL=redshift_cluster_jdbc_url_param,
                 CopyCommand=CopyCommand(
-                    CopyOptions='JSON 'auto' ' + s3_compression_format,
+                    CopyOptions='JSON \'auto\' ' + s3_compression_format,
                     DataTableName=redshift_db_table_name,
                 ),
                 Password=redshift_password,

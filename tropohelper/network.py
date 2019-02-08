@@ -244,6 +244,7 @@ def create_target_group(stack,
                 Port=port,
                 Protocol=protocol,
                 Targets=targets,
+                TargetType=target_type,
                 UnhealthyThresholdCount='3',
                 VpcId=Ref(stack.vpc)))
 

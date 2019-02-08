@@ -229,6 +229,10 @@ def create_target_group(stack,
                         health_check_path='/',
                         target_type='instance'):
     """Add Target Group Resource."""
+    target_objects = []
+
+    for target in targets:
+        target_objects.append(alb.TargetDescription(Id=target))
 
     if http_codes is not None:
         return stack.stack.add_resource(
@@ -243,7 +247,7 @@ def create_target_group(stack,
                 Name='{0}Target'.format(name),
                 Port=port,
                 Protocol=protocol,
-                Targets=targets,
+                Targets=target_objects,
                 TargetType=target_type,
                 UnhealthyThresholdCount='3',
                 VpcId=Ref(stack.vpc)))

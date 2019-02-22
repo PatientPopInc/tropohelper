@@ -227,12 +227,23 @@ def create_target_group(stack,
                         targets=[],
                         http_codes='200',
                         health_check_path='/',
-                        target_type='instance'):
+                        target_type='instance',
+                        attributes=False):
     """Add Target Group Resource."""
     target_objects = []
 
     for target in targets:
         target_objects.append(alb.TargetDescription(Id=target))
+
+    tg_atts = []
+
+    if not attributes:
+        tg_atts.append(
+            alb.TargetGroupAttribute(
+                Key='deregistration_delay.timeout_seconds', Value='300'))
+    else:
+        for att, value in attributes.items():
+            tg_atts.append(alb.TargetGroupAttribute(Key=att, Value=value))
 
     if http_codes is not None:
         return stack.stack.add_resource(
@@ -250,6 +261,7 @@ def create_target_group(stack,
                 Targets=target_objects,
                 TargetType=target_type,
                 UnhealthyThresholdCount='3',
+                TargetGroupAttributes=tg_atts,
                 VpcId=Ref(stack.vpc)))
 
     return stack.stack.add_resource(
@@ -265,6 +277,7 @@ def create_target_group(stack,
             Targets=targets,
             UnhealthyThresholdCount='3',
             TargetType=target_type,
+            TargetGroupAttributes=tg_atts,
             VpcId=Ref(stack.vpc)))
 
 

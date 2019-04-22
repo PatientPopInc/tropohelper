@@ -26,13 +26,14 @@ def create_vpc(stack, name):
         ))
 
 
-def create_vpc_peer(stack, connection):
+def create_vpc_peer(stack, connection, peer_region='us-east-1'):
     """Add VPC Peering Connection Resource."""
 
     return stack.stack.add_resource(
         VPCPeeringConnection(
             '{0}VpcPeeringConnection'.format(connection.replace('-', '')),
             PeerVpcId=connection,
+            PeerRegion=peer_region,
             VpcId=Ref(stack.vpc),
         ))
 

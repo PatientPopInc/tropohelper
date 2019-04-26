@@ -11,14 +11,14 @@ functions keeps things much more DRY.
 
 setup(
     name='tropohelper',
-    version="1.2.0",
+    version="1.3.0",
     description='tropohelper is a collection of troposphere helpers to promote DRY.',
     long_description=long_description,
     author='Michael Gorman',
     author_email='michael@michaeljgorman.com',
     url='https://github.com/mjgorman/tropohelper',
     packages=find_packages(),
-    install_requires=['troposphere==2.4.0', 'awacs>=0.7.2'],
+    install_requires=['troposphere==2.4.6', 'awacs>=0.7.2'],
     test_suite='nose.collector',
     tests_require=['nose<2.0']
 )

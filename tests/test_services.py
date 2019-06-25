@@ -111,9 +111,15 @@ class test_stack(object):
         assert sns_topic_properties['Subscription'][0]['Protocol'] == 'https'
         assert sns_topic_properties['TopicName'] == 'topic-1Topic'
 
-        create_sns_notification_alarm(self.stack, 'alarm-1', 'description for alarm_1',
-                                      'metric1', 'LogMetrics',
-                                      GetAtt(sns_topic, 'Arn'))
+        create_sns_notification_alarm(
+            stack=self.stack,
+            name='alarm-1',
+            description='description for alarm_1',
+            metric_name='metric1',
+            metric_namespace='LogMetrics',
+            sns_topic_arn=GetAtt(sns_topic, 'Arn'),
+            dimensions={'Resource': 'loggroup1LogGroup'}
+        )
         sns_notification_alarm = self.stack.stack.to_dict()['Resources']['alarm1Alarm']
         assert sns_notification_alarm['Type'] == 'AWS::CloudWatch::Alarm'
         sns_notification_alarm_properties = sns_notification_alarm['Properties']
@@ -121,6 +127,7 @@ class test_stack(object):
         assert sns_notification_alarm_properties['AlarmDescription'] == 'description for alarm_1'
         assert sns_notification_alarm_properties['AlarmActions'][0]['Fn::GetAtt'][0]['Properties']['TopicName'] == 'topic-1Topic'
         assert sns_notification_alarm_properties['ComparisonOperator'] == 'GreaterThanThreshold'
+        assert sns_notification_alarm_properties['Dimensions'][0] == {'Name': 'Resource', 'Value': 'loggroup1LogGroup'}
         assert sns_notification_alarm_properties['EvaluationPeriods'] == '1'
         assert sns_notification_alarm_properties['MetricName'] == 'metric1Metric'
         assert sns_notification_alarm_properties['Namespace'] == 'LogMetrics'

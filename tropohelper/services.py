@@ -1,6 +1,6 @@
 import troposphere.elasticache as elasticache
 from troposphere import Ref
-from troposphere.cloudwatch import Alarm
+from troposphere.cloudwatch import Alarm, MetricDimension
 from troposphere.ec2 import SecurityGroup, SecurityGroupRule
 from troposphere.firehose import (
     BufferingHints, CloudWatchLoggingOptions, CopyCommand, DeliveryStream,
@@ -179,8 +179,11 @@ def create_sns_notification_alarm(stack,
                                   threshold='0',
                                   evaluation_periods='1',
                                   period_secs='60',
-                                  statistic='Minimum'):
+                                  statistic='Minimum',
+                                  dimensions=None):
     """Add SNS notification alarm for a cloud watch log metric which triggers alarm based on the specified criteria."""
+    dimensions = dimensions or {}
+    dimensions_list = [MetricDimension(Name=k, Value=v) for k,v in dimensions.items()]
 
     return stack.stack.add_resource(
         Alarm(
@@ -189,6 +192,7 @@ def create_sns_notification_alarm(stack,
             AlarmDescription=description,
             AlarmActions=[sns_topic_arn],
             ComparisonOperator=comparison_operator,
+            Dimensions=dimensions_list,
             EvaluationPeriods=evaluation_periods,
             MetricName='{0}Metric'.format(metric_name.replace('-', '')),
             Namespace=metric_namespace,

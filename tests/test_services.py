@@ -134,4 +134,4 @@ class test_stack(object):
         assert sns_notification_alarm_properties['Period'] == '60'
         assert sns_notification_alarm_properties['Statistic'] == 'Minimum'
         assert sns_notification_alarm_properties['Threshold'] == '0'
-
+        assert sns_notification_alarm_properties['TreatMissingData'] == 'missing'

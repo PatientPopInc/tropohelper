@@ -180,7 +180,8 @@ def create_sns_notification_alarm(stack,
                                   evaluation_periods='1',
                                   period_secs='60',
                                   statistic='Minimum',
-                                  dimensions=None):
+                                  dimensions=None,
+                                  treatMissingData='missing'):
     """Add SNS notification alarm for a cloud watch log metric which triggers alarm based on the specified criteria."""
     dimensions = dimensions or {}
     dimensions_list = [MetricDimension(Name=k, Value=v) for k,v in dimensions.items()]
@@ -198,7 +199,8 @@ def create_sns_notification_alarm(stack,
             Namespace=metric_namespace,
             Period=period_secs,
             Statistic=statistic,
-            Threshold=threshold))
+            Threshold=threshold,
+            TreatMissingData=treatMissingData))
 
 
 def create_cache_cluster(stack, name, cache_type, vpc, cidrs, subnet_ids,

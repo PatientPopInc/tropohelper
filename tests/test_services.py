@@ -129,7 +129,7 @@ class test_stack(object):
         assert sns_notification_alarm_properties['ComparisonOperator'] == 'GreaterThanThreshold'
         assert sns_notification_alarm_properties['Dimensions'][0] == {'Name': 'Resource', 'Value': 'loggroup1LogGroup'}
         assert sns_notification_alarm_properties['EvaluationPeriods'] == '1'
-        assert sns_notification_alarm_properties['MetricName'] == 'metric1Metric'
+        assert sns_notification_alarm_properties['MetricName'] == 'metric1'
         assert sns_notification_alarm_properties['Namespace'] == 'LogMetrics'
         assert sns_notification_alarm_properties['Period'] == '60'
         assert sns_notification_alarm_properties['Statistic'] == 'Minimum'

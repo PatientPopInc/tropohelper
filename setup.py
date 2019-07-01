@@ -11,7 +11,7 @@ functions keeps things much more DRY.
 
 setup(
     name='tropohelper',
-    version="1.3.0",
+    version="1.4.0",
     description='tropohelper is a collection of troposphere helpers to promote DRY.',
     long_description=long_description,
     author='Michael Gorman',

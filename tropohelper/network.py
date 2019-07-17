@@ -8,14 +8,17 @@ from troposphere.rds import DBSubnetGroup
 from troposphere.route53 import HostedZone, RecordSetType
 
 
-def create_vpc(stack, name):
+def create_vpc(stack, name, address=None):
     """Add VPC Resource."""
+
+    if address is None:
+        address = Ref(stack.vpc_address_param)
 
     return stack.stack.add_resource(
         VPC(
             '{0}VPC'.format(name),
             EnableDnsSupport='true',
-            CidrBlock=Ref(stack.vpc_address_param),
+            CidrBlock=address,
             EnableDnsHostnames='true',
             Tags=[
                 {

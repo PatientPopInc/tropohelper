@@ -290,7 +290,8 @@ def create_alb(stack,
                subnets=[],
                security_groups=[],
                condition_field='',
-               scheme='internet-facing'):
+               scheme='internet-facing',
+               LoadBalancerAttributes=[]):
     """Add Application Loadbalancer Resource."""
 
     return stack.stack.add_resource(
@@ -300,7 +301,8 @@ def create_alb(stack,
             Name='{0}ALB'.format(name),
             Scheme=scheme,
             SecurityGroups=security_groups,
-            Subnets=subnets))
+            Subnets=subnets,
+            LoadBalancerAttributes=LoadBalancerAttributes))
 
 
 def create_alb_listener(stack,

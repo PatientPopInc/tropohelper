@@ -131,6 +131,7 @@ class test_stack(object):
         assert sns_notification_alarm_properties['EvaluationPeriods'] == '1'
         assert sns_notification_alarm_properties['MetricName'] == 'metric1'
         assert sns_notification_alarm_properties['Namespace'] == 'LogMetrics'
+        assert sns_notification_alarm_properties['OKActions'][0]['Fn::GetAtt'][0]['Properties']['TopicName'] == 'topic-1Topic'
         assert sns_notification_alarm_properties['Period'] == '60'
         assert sns_notification_alarm_properties['Statistic'] == 'Minimum'
         assert sns_notification_alarm_properties['Threshold'] == '0'
